@@ -1,4 +1,3 @@
-# TODO: Change the name of the org
 org: almamarie
 app: serverless-todo-app-5
 service: serverless-todo-app-5
@@ -51,8 +50,8 @@ functions:
           method: get
           path: /
 
-  # Auth:
-  #   handler: src/lambda/auth/auth0Authorizer.handler
+  Auth:
+    handler: src/lambda/auth/auth0Authorizer.handler
 
   # TODO: Configure this function -
   # Provide iamRoleStatements property for performing Actions on DynamoDB
