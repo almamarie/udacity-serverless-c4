@@ -65,9 +65,12 @@ async function verifyToken(authHeader: string): Promise<JwtPayload> {
 
   const response = Axios.get(jwksUrl)
   const keys = (await response).data.keys
-  const signingKeys = keys.find((key) => {
-    key.kid = jwt.header.kid
-  })
+
+  const signingKeys = keys.find((key) => key.kid === jwt.header.kid)
+
+  // const signingKeys = keys.find((key) => {
+  //   key.kid === jwt.header.kid // fixed the comparison bug found here "=" was changed to "==="
+  // })
   logger.info('signingKeys', signingKeys)
 
   if (!signingKeys) {
