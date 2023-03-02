@@ -7,6 +7,8 @@ plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
   - serverless-plugin-tracing
+  - serverless-reqvalidator-plugin
+  - serverless-aws-documentation
 
 provider:
   name: aws
@@ -42,6 +44,17 @@ provider:
             - xray:PutTraceSegments
           Resource: '*'
 
+custom:
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: Todos App
+        description: Serverless application for monitoring todos
+    models:
+      - name: CreateTodoRequest
+        contentType: application/json
+        schema: ${file(models/create-todo-model.json)}
 functions:
   hello:
     handler: handler.hello
@@ -92,10 +105,13 @@ functions:
           method: post
           path: todos
           cors: true
-          # authorizer: Auth
-          # request:
-          #   schemas:
-          #     application/json: ${file(models/create-todo-model.json)}
+          authorizer: Auth
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: create a new todo
+            description: creates a new todo
+            requestModels:
+              'application/json': CreateTodoRequest
     iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-create-todo-role-${self:provider.stage}
     iamRoleStatements:
       - Effect: Allow
@@ -166,6 +182,14 @@ resources:
         RestApiId:
           Ref: ApiGatewayRestApi
 
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
     # TODO: Create a DynamoDB table with local secondary index and a composite key
 
     TodosTable:

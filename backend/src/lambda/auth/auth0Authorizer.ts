@@ -55,7 +55,7 @@ export const handler = async (
 }
 
 async function verifyToken(authHeader: string): Promise<JwtPayload> {
-  logger.info('Verifying token: ', authHeader.substring(0, 20))
+  logger.info(`Verifying token: ${authHeader.substring(0, 20)}`)
   const token = getToken(authHeader)
   const jwt: Jwt = decode(token, { complete: true }) as Jwt
 
@@ -71,18 +71,28 @@ async function verifyToken(authHeader: string): Promise<JwtPayload> {
   // const signingKeys = keys.find((key) => {
   //   key.kid === jwt.header.kid // fixed the comparison bug found here "=" was changed to "==="
   // })
-  logger.info('signingKeys', signingKeys)
+  logger.info(`signingKeys ${signingKeys}`)
 
   if (!signingKeys) {
     throw new Error('The JWKS endpoint did not match any keys')
   }
 
-  const pemData = signingKeys.xSc[0]
+  logger.info(`signing keys found: ${signingKeys}`)
 
-  const cert = `-----BEGIN CERTIFICATE-----\n${pemData}-----END CERTIFICATE-----`
-  const verifiedToken = verify(token, cert, {
-    algorithms: ['RS256']
-  }) as JwtPayload
+  const pemData = signingKeys.x5c[0]
+
+  logger.info(`pemData found: ${pemData}`)
+
+  const cert = `-----BEGIN CERTIFICATE-----\n${pemData}\n-----END CERTIFICATE-----`
+
+  let verifiedToken: JwtPayload
+  try {
+    verifiedToken = verify(token, cert, {
+      algorithms: ['RS256']
+    }) as JwtPayload
+  } catch (error) {
+    throw new Error(`verifying token failed with error message: ${error}`)
+  }
 
   logger.info('verified token: ', verifiedToken)
 
